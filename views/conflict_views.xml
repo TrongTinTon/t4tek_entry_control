@@ -22,8 +22,8 @@
         <field name="arch" type="xml">
             <form string="Sync Conflict">
                 <header>
-                    <button name="action_mark_resolved" type="object" string="Mark Resolved" class="btn-primary" groups="t4_entry_control.group_entry_control_manager"/>
-                    <button name="action_ignore" type="object" string="Ignore" groups="t4_entry_control.group_entry_control_manager"/>
+                    <button name="action_mark_resolved" type="object" string="Mark Resolved" class="btn-primary" groups="t4tek_entry_control.group_entry_control_manager"/>
+                    <button name="action_ignore" type="object" string="Ignore" groups="t4tek_entry_control.group_entry_control_manager"/>
                     <field name="status" widget="statusbar" statusbar_visible="open,reviewing,resolved,ignored"/>
                 </header>
                 <sheet>

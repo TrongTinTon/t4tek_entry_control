@@ -12,8 +12,8 @@
                 <field name="blocked"/>
                 <field name="last_seen_at"/>
                 <field name="device_count"/>
-                <button name="action_block" type="object" string="Block" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status == 'blocked'"/>
-                <button name="action_unblock" type="object" string="Unblock" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status != 'blocked'"/>
+                <button name="action_block" type="object" string="Block" groups="t4tek_entry_control.group_entry_control_manager" invisible="registration_status == 'blocked'"/>
+                <button name="action_unblock" type="object" string="Unblock" groups="t4tek_entry_control.group_entry_control_manager" invisible="registration_status != 'blocked'"/>
             </list>
         </field>
     </record>
@@ -24,8 +24,8 @@
         <field name="arch" type="xml">
             <form string="Controller">
                 <header>
-                    <button name="action_block" type="object" string="Block Controller" class="btn-secondary" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status == 'blocked'"/>
-                    <button name="action_unblock" type="object" string="Unblock Controller" class="btn-primary" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status != 'blocked'"/>
+                    <button name="action_block" type="object" string="Block Controller" class="btn-secondary" groups="t4tek_entry_control.group_entry_control_manager" invisible="registration_status == 'blocked'"/>
+                    <button name="action_unblock" type="object" string="Unblock Controller" class="btn-primary" groups="t4tek_entry_control.group_entry_control_manager" invisible="registration_status != 'blocked'"/>
                     <field name="registration_status" widget="statusbar" statusbar_visible="approved,blocked"/>
                 </header>
                 <sheet>

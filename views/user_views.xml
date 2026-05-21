@@ -54,6 +54,10 @@
                     </group>
                     <notebook>
                         <page string="Fingerprints">
+                            <group string="Sơ đồ vân tay" colspan="4">
+                                <field name="fingerprint_map_json" widget="ec_fingerprint_map" nolabel="1" readonly="1"/>
+                            </group>
+                            <separator string="Fingerprint Master Records"/>
                             <field name="fingerprint_ids" readonly="1">
                                 <list>
                                     <field name="finger_index"/>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>T4TEK Attendance Gateway</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1f2937; line-height: 1.55; margin: 0; padding: 32px; }
+    .hero { display: flex; gap: 20px; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 24px; }
+    .hero img { width: 88px; height: 88px; border-radius: 22px; }
+    h1 { margin: 0 0 6px; color: #0f2742; }
+    h2 { color: #0f2742; margin-top: 28px; }
+    .tagline { color: #4b5563; font-size: 16px; }
+    ul { padding-left: 22px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <img src="icon.png" alt="T4TEK Attendance Gateway icon" />
+    <div>
+      <h1>T4TEK Attendance Gateway</h1>
+      <div class="tagline">Local-first attendance, access control and fingerprint synchronization for ZKTeco devices.</div>
+    </div>
+  </div>
+
+  <h2>Overview</h2>
+  <p>
+    T4TEK Attendance Gateway connects Odoo with Windows Controllers and ZKTeco attendance/access-control devices.
+    The module uses a desired-state synchronization model so Controllers pull the expected state from Odoo,
+    calculate local deltas, and synchronize only what changed.
+  </p>
+
+  <h2>Main Features</h2>
+  <ul>
+    <li>Controller self-registration and token-based authentication.</li>
+    <li>Block / Unblock Controller management from Odoo.</li>
+    <li>Desired-State Sync for Device Users, assignments and deleted users.</li>
+    <li>Fingerprint Master workflow: harvest from source device, upload to Odoo, distribute to multiple devices.</li>
+    <li>Optimized <code>sync_fingerprint_set</code> jobs instead of per-finger command jobs.</li>
+    <li>Attendance log ingestion from local Controllers.</li>
+    <li>OWL fingerprint map widget for 10-finger enrollment visibility.</li>
+  </ul>
+
+  <h2>Operational Workflow</h2>
+  <ol>
+    <li>Controller requests <code>/api/entry_control/v1/auth/token</code>.</li>
+    <li>Controller checks in through <code>/api/entry_control/v1/hello</code>.</li>
+    <li>Controller uploads harvested fingerprints through <code>/api/entry_control/v1/sync/fingerprints/upload</code>.</li>
+    <li>Controller pulls desired state through <code>/api/entry_control/v1/sync/manifest</code>.</li>
+    <li>Controller pulls fingerprint payload only when hashes changed.</li>
+    <li>Controller synchronizes users and fingerprints to local devices.</li>
+  </ol>
+</body>
+</html>

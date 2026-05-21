@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="t4tek_entry_control.FingerprintMapField">
+        <div class="o_ec_fingerprint_widget">
+            <div class="o_ec_fp_header">
+                <div>
+                    <div class="o_ec_fp_title">Sơ đồ vân tay</div>
+                    <div class="o_ec_fp_subtitle">
+                        PIN: <strong t-esc="data.pin || '-'"/>
+                    </div>
+                </div>
+                <div class="o_ec_fp_counter">
+                    <strong t-esc="data.count"/>
+                    <span>/ 10 ngón</span>
+                    <t t-if="data.pendingCount">
+                        <div class="o_ec_fp_pending_counter">
+                            <t t-esc="data.pendingCount"/> chờ duyệt
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <div class="o_ec_fp_body">
+                <div class="o_ec_hand o_ec_hand_left">
+                    <t t-foreach="leftFingers" t-as="finger" t-key="finger.index">
+                        <button type="button" t-att-class="fingerClass(finger)" t-att-title="fingerTooltip(finger)" t-on-click="() => this.selectFinger(finger)">
+                            <span class="o_ec_finger_index" t-esc="finger.index"/>
+                            <span class="o_ec_finger_name" t-esc="finger.name"/>
+                        </button>
+                    </t>
+                </div>
+
+                <div class="o_ec_hand o_ec_hand_right">
+                    <t t-foreach="rightFingers" t-as="finger" t-key="finger.index">
+                        <button type="button" t-att-class="fingerClass(finger)" t-att-title="fingerTooltip(finger)" t-on-click="() => this.selectFinger(finger)">
+                            <span class="o_ec_finger_index" t-esc="finger.index"/>
+                            <span class="o_ec_finger_name" t-esc="finger.name"/>
+                        </button>
+                    </t>
+                </div>
+            </div>
+
+            <div class="o_ec_fp_thumb_row">
+                <t t-foreach="thumbs" t-as="finger" t-key="finger.index">
+                    <button type="button" t-att-class="fingerClass(finger)" t-att-title="fingerTooltip(finger)" t-on-click="() => this.selectFinger(finger)">
+                        <span class="o_ec_finger_index" t-esc="finger.index"/>
+                        <span class="o_ec_finger_name" t-esc="finger.name"/>
+                    </button>
+                </t>
+            </div>
+
+            <div class="o_ec_fp_legend">
+                <span><i class="o_ec_dot is_registered"/>Đã có</span>
+                <span><i class="o_ec_dot is_empty"/>Chưa có</span>
+                <span><i class="o_ec_dot is_pending"/>Chờ duyệt</span>
+                <span><i class="o_ec_dot is_disabled"/>Đã tắt</span>
+                <span><i class="o_ec_dot is_failed"/>Xoá/Từ chối</span>
+            </div>
+
+            <t t-if="selectedFinger">
+                <div class="o_ec_fp_detail">
+                    <div class="o_ec_fp_detail_title">
+                        Chi tiết: <strong t-esc="selectedFinger.name"/>
+                        <span>#<t t-esc="selectedFinger.index"/></span>
+                    </div>
+                    <div class="o_ec_fp_detail_grid">
+                        <div>
+                            <label>Trạng thái</label>
+                            <span t-esc="statusLabel(selectedFinger.status)"/>
+                        </div>
+                        <div>
+                            <label>Version</label>
+                            <span t-esc="selectedFinger.templateVersion || '-'"/>
+                        </div>
+                        <div>
+                            <label>Template hash</label>
+                            <span t-esc="shortHash(selectedFinger.templateHash) || '-'"/>
+                        </div>
+                        <div>
+                            <label>Pending hash</label>
+                            <span t-esc="shortHash(selectedFinger.pendingTemplateHash) || '-'"/>
+                        </div>
+                        <div>
+                            <label>Máy nguồn</label>
+                            <span t-esc="selectedFinger.sourceDeviceCode || '-'"/>
+                        </div>
+                        <div>
+                            <label>Last collected</label>
+                            <span t-esc="selectedFinger.lastCollectedAt || '-'"/>
+                        </div>
+                        <div>
+                            <label>Last pushed</label>
+                            <span t-esc="selectedFinger.lastPushedAt || '-'"/>
+                        </div>
+                        <div>
+                            <label>Last deleted</label>
+                            <span t-esc="selectedFinger.lastDeletedAt || '-'"/>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

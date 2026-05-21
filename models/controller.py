@@ -203,14 +203,20 @@ class EntryControlController(models.Model):
                 "machine_name": payload.get("machine_name") or payload.get("machineName"),
                 "local_ip": payload.get("local_ip") or payload.get("localIp"),
             })
-        controller = self.sudo().search([("controller_code", "=", code)], limit=1)
+        Controller = self.sudo()
+        controller = Controller.search([("controller_code", "=", code)], limit=1)
+        if not controller:
+            controller = Controller.search([("controller_code", "=ilike", code)], order="id asc", limit=1)
         if controller:
             update_vals = {k: v for k, v in vals.items() if v is not None}
+            # Normalize old lowercase/mixed-case records to the stable uppercase code.
+            if controller.controller_code != code:
+                update_vals["controller_code"] = code
             if not controller.blocked and controller.registration_status not in ("blocked", "revoked", "rejected"):
                 update_vals.update({"approved": True, "blocked": False, "registration_status": "approved", "last_error": False})
             controller.sudo().write(update_vals)
         else:
             # New Controller is active immediately.  Admin can block it later.
             vals.update({"approved": True, "blocked": False, "registration_status": "approved", "last_error": False})
-            controller = self.sudo().create(vals)
+            controller = Controller.create(vals)
         return controller

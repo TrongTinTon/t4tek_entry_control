@@ -46,12 +46,17 @@ class EntryControlAPI(http.Controller):
         return (code or "").strip().upper()
 
     def _get_controller_code(self, data):
-        # Important: do not accept controller_id/controllerId as business code.
-        # Those names are ambiguous with Odoo database ids and caused duplicate Controllers.
+        # Preferred names are controller_code / controllerCode and X-Controller-Code.
+        # controller_id / controllerId are accepted only as compatibility aliases
+        # because older Controller builds used those names for the same business code.
+        # The value is normalized and looked up case-insensitively to avoid duplicate
+        # Controller records.
         return self._normalize_controller_code(
             request.httprequest.headers.get("X-Controller-Code")
             or data.get("controller_code")
             or data.get("controllerCode")
+            or data.get("controller_id")
+            or data.get("controllerId")
             or ""
         )
 
@@ -124,7 +129,11 @@ class EntryControlAPI(http.Controller):
         code = self._normalize_controller_code(code)
         if not code:
             return request.env["entry.control.controller"].sudo().browse()
-        return request.env["entry.control.controller"].sudo().search([("controller_code", "=", code)], limit=1)
+        Controller = request.env["entry.control.controller"].sudo()
+        controller = Controller.search([("controller_code", "=", code)], limit=1)
+        if controller:
+            return controller
+        return Controller.search([("controller_code", "=ilike", code)], order="id asc", limit=1)
 
     def _auth_controller(self, data=None):
         data = data or self._read_json_body()
