@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_entry_control" model="ir.module.category">
+        <field name="name">Entry Control</field>
+        <field name="description">T4 Entry Control permissions</field>
+        <field name="sequence">40</field>
+    </record>
+
+    <record id="group_entry_control_user" model="res.groups">
+        <field name="name">Entry Control User</field>
+        <field name="category_id" ref="module_category_entry_control"/>
+    </record>
+
+    <record id="group_entry_control_manager" model="res.groups">
+        <field name="name">Entry Control Manager</field>
+        <field name="category_id" ref="module_category_entry_control"/>
+        <field name="implied_ids" eval="[(4, ref('group_entry_control_user'))]"/>
+    </record>
+
+    <!--
+        Visibility fix:
+        The first version locked the root menu with a custom group, so the menu could
+        be hidden after installation when the current Odoo user had not been assigned
+        to that group. Internal users now imply Entry Control User, which makes the
+        menu visible immediately after install while manager-only buttons remain
+        protected by group_entry_control_manager.
+    -->
+    <record id="base.group_user" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_entry_control_user'))]"/>
+    </record>
+</odoo>

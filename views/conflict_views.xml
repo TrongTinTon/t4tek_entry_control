@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_conflict_list" model="ir.ui.view">
+        <field name="name">entry.control.conflict.list</field>
+        <field name="model">entry.control.conflict</field>
+        <field name="arch" type="xml">
+            <list string="Sync Conflicts" create="0" edit="1">
+                <field name="create_date"/>
+                <field name="conflict_type"/>
+                <field name="entity_type"/>
+                <field name="entity_key"/>
+                <field name="device_code"/>
+                <field name="controller_id"/>
+                <field name="status"/>
+                <field name="resolved_at"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_entry_control_conflict_form" model="ir.ui.view">
+        <field name="name">entry.control.conflict.form</field>
+        <field name="model">entry.control.conflict</field>
+        <field name="arch" type="xml">
+            <form string="Sync Conflict">
+                <header>
+                    <button name="action_mark_resolved" type="object" string="Mark Resolved" class="btn-primary" groups="t4_entry_control.group_entry_control_manager"/>
+                    <button name="action_ignore" type="object" string="Ignore" groups="t4_entry_control.group_entry_control_manager"/>
+                    <field name="status" widget="statusbar" statusbar_visible="open,reviewing,resolved,ignored"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="conflict_type"/>
+                            <field name="entity_type"/>
+                            <field name="entity_key"/>
+                            <field name="device_code"/>
+                            <field name="device_id"/>
+                            <field name="controller_id"/>
+                        </group>
+                        <group>
+                            <field name="resolved_at" readonly="1"/>
+                            <field name="resolution"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Server Value"><field name="server_value"/></page>
+                        <page string="Local Value"><field name="local_value"/></page>
+                        <page string="Device Value"><field name="device_value"/></page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_entry_control_conflict_search" model="ir.ui.view">
+        <field name="name">entry.control.conflict.search</field>
+        <field name="model">entry.control.conflict</field>
+        <field name="arch" type="xml">
+            <search string="Sync Conflicts">
+                <field name="entity_key"/>
+                <field name="device_code"/>
+                <filter name="open" string="Open" domain="[('status','=','open')]"/>
+                <filter name="missing" string="Missing User" domain="[('conflict_type','=','user_missing_on_device')]"/>
+                <filter name="unknown" string="Unknown User" domain="[('conflict_type','=','unknown_user_on_device')]"/>
+                <filter name="user_mismatch" string="User Data Mismatch" domain="[('conflict_type','=','user_data_mismatch_on_device')]"/>
+                <filter name="fingerprint_mismatch" string="Fingerprint Mismatch" domain="[('conflict_type','=','fingerprint_mismatch_on_device')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_entry_control_conflict" model="ir.actions.act_window">
+        <field name="name">Sync Conflicts</field>
+        <field name="res_model">entry.control.conflict</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_conflict_search"/>
+    </record>
+</odoo>

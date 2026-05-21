@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_assignment_list" model="ir.ui.view">
+        <field name="name">entry.control.assignment.list</field>
+        <field name="model">entry.control.assignment</field>
+        <field name="arch" type="xml">
+            <list string="Assignments" create="1" edit="1">
+                <field name="pin"/>
+                <field name="user_id"/>
+                <field name="device_code"/>
+                <field name="device_id"/>
+                <field name="controller_id"/>
+                <field name="desired_state"/>
+                <field name="source"/>
+                <field name="assigned_at"/>
+                <field name="removed_at"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_entry_control_assignment_form" model="ir.ui.view">
+        <field name="name">entry.control.assignment.form</field>
+        <field name="model">entry.control.assignment</field>
+        <field name="arch" type="xml">
+            <form string="Assignment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="pin" readonly="1"/>
+                            <field name="device_id"/>
+                            <field name="device_code" readonly="1"/>
+                            <field name="controller_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="desired_state"/>
+                            <field name="source"/>
+                            <field name="assigned_at"/>
+                            <field name="removed_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_entry_control_assignment_search" model="ir.ui.view">
+        <field name="name">entry.control.assignment.search</field>
+        <field name="model">entry.control.assignment</field>
+        <field name="arch" type="xml">
+            <search string="Assignments">
+                <field name="pin"/>
+                <field name="device_code"/>
+                <filter name="present" string="Present" domain="[('desired_state','=','present')]"/>
+                <filter name="deleted" string="Deleted" domain="[('desired_state','=','deleted')]"/>
+                <filter name="disabled" string="Disabled" domain="[('desired_state','=','disabled')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_entry_control_assignment" model="ir.actions.act_window">
+        <field name="name">Assignments</field>
+        <field name="res_model">entry.control.assignment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_assignment_search"/>
+    </record>
+</odoo>

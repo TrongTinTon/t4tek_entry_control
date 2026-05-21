@@ -1,0 +1,29 @@
+/* Keep long fingerprint template strings readable inside the Biometric Template form. */
+.o_form_view .o_entry_control_template_data {
+    max-width: 100%;
+}
+
+.o_form_view .o_entry_control_template_data,
+.o_form_view .o_entry_control_template_data .o_field_widget,
+.o_form_view .o_entry_control_template_data .o_field_text,
+.o_form_view .o_entry_control_template_data .o_readonly_modifier,
+.o_form_view .o_entry_control_template_data span,
+.o_form_view .o_entry_control_template_data textarea,
+.o_form_view .o_entry_control_template_data pre {
+    box-sizing: border-box;
+    display: block;
+    max-width: 100%;
+    max-height: 240px;
+    overflow: auto !important;
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-all !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.o_form_view .o_entry_control_template_data textarea {
+    min-height: 140px;
+    resize: vertical;
+}

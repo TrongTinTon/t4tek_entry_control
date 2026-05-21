@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_attendance_log_list" model="ir.ui.view">
+        <field name="name">entry.control.attendance.log.list</field>
+        <field name="model">entry.control.attendance.log</field>
+        <field name="arch" type="xml">
+            <list string="Attendance Logs" create="0" edit="1">
+                <field name="check_time"/>
+                <field name="pin"/>
+                <field name="user_id"/>
+                <field name="device_code"/>
+                <field name="controller_id"/>
+                <field name="check_type"/>
+                <field name="verify_type"/>
+                <field name="work_code"/>
+                <field name="sync_status"/>
+                <field name="event_hash"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_entry_control_attendance_log_form" model="ir.ui.view">
+        <field name="name">entry.control.attendance.log.form</field>
+        <field name="model">entry.control.attendance.log</field>
+        <field name="arch" type="xml">
+            <form string="Attendance Log">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="check_time"/>
+                            <field name="pin"/>
+                            <field name="user_id"/>
+                            <field name="device_code"/>
+                            <field name="device_id"/>
+                            <field name="controller_id"/>
+                        </group>
+                        <group>
+                            <field name="check_type"/>
+                            <field name="verify_type"/>
+                            <field name="work_code"/>
+                            <field name="event_hash" readonly="1"/>
+                            <field name="sync_status"/>
+                        </group>
+                    </group>
+                    <field name="raw_data"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_entry_control_attendance_log_search" model="ir.ui.view">
+        <field name="name">entry.control.attendance.log.search</field>
+        <field name="model">entry.control.attendance.log</field>
+        <field name="arch" type="xml">
+            <search string="Attendance Logs">
+                <field name="pin"/>
+                <field name="device_code"/>
+                <field name="event_hash"/>
+                <filter name="today" string="Today" domain="[('check_time','&gt;=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter name="received" string="Received" domain="[('sync_status','=','received')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_entry_control_attendance_log" model="ir.actions.act_window">
+        <field name="name">Attendance Logs</field>
+        <field name="res_model">entry.control.attendance.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_attendance_log_search"/>
+    </record>
+</odoo>

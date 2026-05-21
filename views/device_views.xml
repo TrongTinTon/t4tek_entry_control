@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_device_list" model="ir.ui.view">
+        <field name="name">entry.control.device.list</field>
+        <field name="model">entry.control.device</field>
+        <field name="arch" type="xml">
+            <list string="Devices" create="1" edit="1">
+                <field name="device_code"/>
+                <field name="name"/>
+                <field name="controller_id"/>
+                <field name="ip_address"/>
+                <field name="port"/>
+                <field name="machine_no"/>
+                <field name="is_online"/>
+                <field name="last_seen_at"/>
+                <field name="assignment_count" string="Auto Users"/>
+                <field name="last_error"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_entry_control_device_form" model="ir.ui.view">
+        <field name="name">entry.control.device.form</field>
+        <field name="model">entry.control.device</field>
+        <field name="arch" type="xml">
+            <form string="Device">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="controller_id"/>
+                            <field name="device_code"/>
+                            <field name="name"/>
+                            <field name="device_name"/>
+                            <field name="device_type"/>
+                        </group>
+                        <group>
+                            <field name="ip_address"/>
+                            <field name="port"/>
+                            <field name="machine_no"/>
+                            <field name="comm_mode"/>
+                            <field name="is_online" readonly="1"/>
+                            <field name="assignment_count" readonly="1" string="Auto Sync Users"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Inventory">
+                            <group>
+                                <field name="serial_number"/>
+                                <field name="model"/>
+                                <field name="firmware_version"/>
+                            </group>
+                        </page>
+                        <page string="Status">
+                            <group>
+                                <field name="last_seen_at" readonly="1"/>
+                                <field name="last_online_at" readonly="1"/>
+                                <field name="last_offline_at" readonly="1"/>
+                                <field name="last_diagnostic_at" readonly="1"/>
+                                <field name="last_user_pull_at" readonly="1"/>
+                                <field name="last_attendance_pull_at" readonly="1"/>
+                                <field name="last_fingerprint_pull_at" readonly="1"/>
+                                <field name="last_error" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_entry_control_device_search" model="ir.ui.view">
+        <field name="name">entry.control.device.search</field>
+        <field name="model">entry.control.device</field>
+        <field name="arch" type="xml">
+            <search string="Devices">
+                <field name="device_code"/>
+                <field name="name"/>
+                <field name="controller_id"/>
+                <filter name="active" string="Active" domain="[('active','=',True)]"/>
+                <filter name="online" string="Online" domain="[('is_online','=',True)]"/>
+                <filter name="offline" string="Offline" domain="[('is_online','=',False)]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_entry_control_device" model="ir.actions.act_window">
+        <field name="name">Devices</field>
+        <field name="res_model">entry.control.device</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_device_search"/>
+    </record>
+</odoo>

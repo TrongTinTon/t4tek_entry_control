@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_entry_control_root"
+              name="Entry Control"
+              sequence="30"/>
+
+    <menuitem id="menu_entry_control_operation"
+              name="Operations"
+              parent="menu_entry_control_root"
+              sequence="10"/>
+
+    <menuitem id="menu_entry_control_users"
+              name="Device Users"
+              parent="menu_entry_control_operation"
+              action="action_entry_control_user"
+              sequence="10"/>
+
+
+    <menuitem id="menu_entry_control_fingerprints"
+              name="Fingerprints"
+              parent="menu_entry_control_operation"
+              action="action_entry_control_fingerprint"
+              sequence="20"/>
+
+    <menuitem id="menu_entry_control_attendance"
+              name="Attendance Logs"
+              parent="menu_entry_control_operation"
+              action="action_entry_control_attendance_log"
+              sequence="30"/>
+
+    <menuitem id="menu_entry_control_integration"
+              name="Integration"
+              parent="menu_entry_control_root"
+              sequence="20"/>
+
+    <menuitem id="menu_entry_control_controllers"
+              name="Controllers"
+              parent="menu_entry_control_integration"
+              action="action_entry_control_controller"
+              sequence="10"/>
+
+    <menuitem id="menu_entry_control_devices"
+              name="Devices"
+              parent="menu_entry_control_integration"
+              action="action_entry_control_device"
+              sequence="20"/>
+
+    <menuitem id="menu_entry_control_conflicts"
+              name="Sync Conflicts"
+              parent="menu_entry_control_integration"
+              action="action_entry_control_conflict"
+              sequence="50"/>
+</odoo>

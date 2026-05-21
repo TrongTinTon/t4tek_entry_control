@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_controller_list" model="ir.ui.view">
+        <field name="name">entry.control.controller.list</field>
+        <field name="model">entry.control.controller</field>
+        <field name="arch" type="xml">
+            <list string="Controllers" create="1" edit="1">
+                <field name="controller_code"/>
+                <field name="name"/>
+                <field name="registration_status"/>
+                <field name="approved"/>
+                <field name="blocked"/>
+                <field name="last_seen_at"/>
+                <field name="device_count"/>
+                <button name="action_block" type="object" string="Block" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status == 'blocked'"/>
+                <button name="action_unblock" type="object" string="Unblock" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status != 'blocked'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_controller_form" model="ir.ui.view">
+        <field name="name">entry.control.controller.form</field>
+        <field name="model">entry.control.controller</field>
+        <field name="arch" type="xml">
+            <form string="Controller">
+                <header>
+                    <button name="action_block" type="object" string="Block Controller" class="btn-secondary" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status == 'blocked'"/>
+                    <button name="action_unblock" type="object" string="Unblock Controller" class="btn-primary" groups="t4_entry_control.group_entry_control_manager" invisible="registration_status != 'blocked'"/>
+                    <field name="registration_status" widget="statusbar" statusbar_visible="approved,blocked"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="controller_code"/>
+                            <field name="name"/>
+                            <field name="controller_name"/>
+                            <field name="approved" readonly="1"/>
+                            <field name="blocked" readonly="1"/>
+                            <field name="token_hint" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="last_seen_at" readonly="1"/>
+                            <field name="last_hello_at" readonly="1"/>
+                            <field name="last_auth_at" readonly="1"/>
+                            <field name="last_device_report_at" readonly="1"/>
+                            <field name="device_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Security">
+                            <group>
+                                <field name="public_key_pem"/>
+                                <field name="key_fingerprint"/>
+                                <field name="private_key_ref" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Status">
+                            <group>
+                                <field name="server_base_url"/>
+                                <field name="app_version" readonly="1"/>
+                                <field name="machine_name" readonly="1"/>
+                                <field name="local_ip" readonly="1"/>
+                                <field name="last_error" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Workflow">
+                            <div class="text-muted">
+                                Controller records are activated automatically when /api/entry_control/v1/auth/token is called. /hello requires token and only updates heartbeat. Device Users/Fingerprints are synchronized by desired-state manifest; the desired-state manifest is the normal workflow.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_entry_control_controller_search" model="ir.ui.view">
+        <field name="name">entry.control.controller.search</field>
+        <field name="model">entry.control.controller</field>
+        <field name="arch" type="xml">
+            <search string="Controllers">
+                <field name="controller_code"/>
+                <field name="name"/>
+                <filter name="approved" string="Active" domain="[('approved','=',True),('registration_status','=','approved')]"/>
+                <filter name="blocked" string="Blocked" domain="['|',('blocked','=',True),('registration_status','=','blocked')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_entry_control_controller" model="ir.actions.act_window">
+        <field name="name">Controllers</field>
+        <field name="res_model">entry.control.controller</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_controller_search"/>
+    </record>
+</odoo>

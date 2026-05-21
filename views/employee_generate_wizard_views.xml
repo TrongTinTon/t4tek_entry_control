@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_generate_users_wizard_form" model="ir.ui.view">
+        <field name="name">entry.control.generate.users.wizard.form</field>
+        <field name="model">entry.control.generate.users.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Device Users from Employees">
+                <sheet>
+                    <group>
+                        <group string="Employees">
+                            <field name="employee_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                            <field name="active_employees_only"/>
+                            <field name="pin_source"/>
+                            <field name="card_source"/>
+                        </group>
+                        <group string="Generate rule">
+                            <field name="update_existing"/>
+                            <div class="text-muted" colspan="2">
+                                The wizard creates or updates Device Users. Controllers automatically pull desired-state manifest by last_sync_version and apply the required local delta jobs.
+                            </div>
+                        </group>
+                    </group>
+                    <group string="Result" invisible="not result_message">
+                        <field name="result_message" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate" type="object" string="Generate" class="btn-primary"/>
+                    <button string="Close" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_entry_control_generate_users_wizard" model="ir.actions.act_window">
+        <field name="name">Generate Device Users from Employees</field>
+        <field name="res_model">entry.control.generate.users.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="hr.model_hr_employee"/>
+        <field name="binding_view_types">list,form</field>
+    </record>
+</odoo>

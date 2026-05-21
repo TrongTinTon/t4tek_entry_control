@@ -1,0 +1,914 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== Controllers ===================== -->
+    <record id="view_entry_control_controller_search" model="ir.ui.view">
+        <field name="name">entry.control.controller.search</field>
+        <field name="model">entry.control.controller</field>
+        <field name="arch" type="xml">
+            <search string="Controllers">
+                <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                <field name="controller_uid"/>
+                <field name="controller_base_url"/>
+                <field name="last_seen_ip"/>
+                <filter string="Pending" name="pending" domain="[('state','=','pending')]"/>
+                <filter string="Approved" name="approved" domain="[('state','=','approved')]"/>
+                <filter string="Suspicious" name="suspicious" domain="[('state','=','suspicious')]"/>
+                <filter string="Blocked" name="blocked" domain="[('state','=','blocked')]"/>
+                <filter string="Group by State" name="group_by_state" context="{'group_by':'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_controller_list" model="ir.ui.view">
+        <field name="name">entry.control.controller.list</field>
+        <field name="model">entry.control.controller</field>
+        <field name="arch" type="xml">
+            <list string="Entry Controllers"
+                  decoration-success="heartbeat_effective_state == 'online'"
+                  decoration-warning="heartbeat_effective_state == 'warning' or state in ('pending', 'suspicious')"
+                  decoration-danger="heartbeat_effective_state in ('offline', 'error') or state == 'blocked'">
+                <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                <field name="controller_uid"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'approved'"
+                       decoration-warning="state in ('pending', 'suspicious')"
+                       decoration-danger="state == 'blocked'"/>
+                <field name="active_controller"/>
+                <field name="heartbeat_effective_state" widget="badge"
+                       decoration-success="heartbeat_effective_state == 'online'"
+                       decoration-warning="heartbeat_effective_state == 'warning'"
+                       decoration-danger="heartbeat_effective_state == 'error'"
+                       decoration-muted="heartbeat_effective_state == 'offline'"/>
+                <field name="last_heartbeat_at"/>
+                <field name="heartbeat_pending_outbox_count"/>
+                <field name="heartbeat_failed_outbox_count"/>
+                <field name="controller_base_url"/>
+                <field name="last_seen_ip"/>
+                <field name="last_seen_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_controller_form" model="ir.ui.view">
+        <field name="name">entry.control.controller.form</field>
+        <field name="model">entry.control.controller</field>
+        <field name="arch" type="xml">
+            <form string="Entry Controller">
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="btn-primary" invisible="state == 'approved'"/>
+                    <button name="action_sync_all_enabled_users" type="object" string="Sync All Users" invisible="state != 'approved'"/>
+                    <button name="action_push_all_fingerprints" type="object" string="Push All Fingerprints" class="btn-secondary" invisible="state != 'approved'"/>
+                    <button name="action_refresh_sync_progress" type="object" string="Refresh Sync Progress" invisible="state != 'approved'"/>
+                    <button name="action_generate_devices_from_agent" type="object" string="Generate Devices" class="btn-secondary" invisible="state != 'approved'"/>
+                    <button name="action_disconnect_agent" type="object" string="Disconnect Controller" invisible="state != 'approved'"/>
+                    <button name="action_block" type="object" string="Block" class="btn-secondary" invisible="state == 'blocked'"/>
+                    <button name="action_set_pending" type="object" string="Set Pending" invisible="state == 'pending'"/>
+                    <button name="action_regenerate_token" type="object" string="Regenerate Token" confirm="Regenerate token? Existing controller must be updated with the new token."/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,approved,suspicious,blocked"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/></h1>
+                    </div>
+
+                    <group>
+                        <group string="Identity">
+                            <field name="controller_uid"/>
+                            <field name="active_controller"/>
+                            <field name="api_token" readonly="1" password="True"/>
+                            <field name="agent_api_key" password="True"/>
+                            <field name="api_version" readonly="1"/>
+                        </group>
+                        <group string="Controller Connection">
+                            <field name="controller_base_url" placeholder="https://tinton.tail52e8f6.ts.net"/>
+                            <field name="last_seen_ip" readonly="1"/>
+                            <field name="first_seen_at" readonly="1"/>
+                            <field name="last_seen_at" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Runtime Health">
+                        <group>
+                            <field name="heartbeat_effective_state" widget="badge" readonly="1"
+                                   decoration-success="heartbeat_effective_state == 'online'"
+                                   decoration-warning="heartbeat_effective_state == 'warning'"
+                                   decoration-danger="heartbeat_effective_state == 'error'"
+                                   decoration-muted="heartbeat_effective_state == 'offline'"/>
+                            <field name="last_heartbeat_at" readonly="1"/>
+                            <field name="heartbeat_age_seconds" readonly="1"/>
+                            <field name="heartbeat_message" readonly="1"/>
+                            <field name="heartbeat_app_version" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="heartbeat_device_connected" readonly="1"/>
+                            <field name="heartbeat_push_worker_running" readonly="1"/>
+                            <field name="heartbeat_worker_running" readonly="1"/>
+                            <field name="heartbeat_local_db_ok" readonly="1"/>
+                            <field name="heartbeat_pending_outbox_count" readonly="1"/>
+                            <field name="heartbeat_failed_outbox_count" readonly="1"/>
+                            <field name="heartbeat_last_event_at" readonly="1"/>
+                            <field name="heartbeat_last_push_at" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Server-side Device Control">
+                        <field name="primary_device_id"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Managed Devices">
+                            <field name="device_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="enabled"/>
+                                    <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                                    <field name="device_code"/>
+                                    <field name="serial_number"/>
+                                    <field name="platform"/>
+                                    <field name="firmware_version"/>
+                                    <field name="device_ip"/>
+                                    <field name="device_port"/>
+                                    <field name="machine_number"/>
+                                    <field name="is_primary"/>
+                                    <field name="sync_users"/>
+                                    <field name="effective_connection_state" widget="badge"
+                                           decoration-success="effective_connection_state == 'connected'"
+                                           decoration-warning="effective_connection_state in ('unknown','disconnected')"
+                                           decoration-danger="effective_connection_state == 'failed'"
+                                           decoration-muted="effective_connection_state in ('disabled','controller_offline')"/>
+                                    <field name="connection_state" widget="badge"/>
+                                    <field name="last_user_sync_progress_percent" widget="progressbar"/>
+                                    <field name="last_user_sync_state" widget="badge"/>
+                <field name="last_fingerprint_pull_progress_percent" widget="progressbar"/>
+                <field name="last_fingerprint_pull_state" widget="badge"/>
+                                    <field name="last_user_sync_current_step"/>
+                                    <field name="last_connect_at"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Security Events">
+                            <field name="security_event_ids" readonly="1">
+                                <list>
+                                    <field name="create_date"/>
+                                    <field name="event_type"/>
+                                    <field name="source_ip"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Attendance Logs">
+                            <field name="attendance_log_ids" readonly="1">
+                                <list>
+                                    <field name="event_time"/>
+                                    <field name="device_user_id"/>
+                                    <field name="employee_id"/>
+                                    <field name="action"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Last Controller Payload">
+                            <field name="last_payload" readonly="1" nolabel="1"/>
+                        </page>
+                        <page string="Note">
+                            <field name="note" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_entry_control_controller" model="ir.actions.act_window">
+        <field name="name">Controllers</field>
+        <field name="res_model">entry.control.controller</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_by_state': 1}</field>
+    </record>
+
+    <!-- ===================== Devices ===================== -->
+    <record id="view_entry_control_device_search" model="ir.ui.view">
+        <field name="name">entry.control.device.search</field>
+        <field name="model">entry.control.device</field>
+        <field name="arch" type="xml">
+            <search string="Devices">
+                <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                <field name="device_code"/>
+                <field name="device_ip"/>
+                <field name="controller_id"/>
+                <filter string="Enabled" name="enabled" domain="[('enabled','=',True)]"/>
+                <filter string="Disabled" name="disabled" domain="[('enabled','=',False)]"/>
+                <filter string="Primary" name="primary" domain="[('is_primary','=',True)]"/>
+                <filter string="Group by Controller" name="group_by_controller" context="{'group_by':'controller_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_device_list" model="ir.ui.view">
+        <field name="name">entry.control.device.list</field>
+        <field name="model">entry.control.device</field>
+        <field name="arch" type="xml">
+            <list string="Devices"
+                  decoration-success="effective_connection_state == 'connected'"
+                  decoration-warning="effective_connection_state in ('unknown','disconnected')"
+                  decoration-danger="effective_connection_state == 'failed'"
+                  decoration-muted="effective_connection_state in ('disabled','controller_offline')">
+                <field name="enabled"/>
+                <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                <field name="device_code"/>
+                <field name="serial_number"/>
+                <field name="platform"/>
+                <field name="firmware_version"/>
+                <field name="controller_id"/>
+                <field name="device_ip"/>
+                <field name="device_port"/>
+                <field name="machine_number"/>
+                <field name="is_primary"/>
+                <field name="sync_users"/>
+                <field name="effective_connection_state" widget="badge"
+                       decoration-success="effective_connection_state == 'connected'"
+                       decoration-warning="effective_connection_state in ('unknown','disconnected')"
+                       decoration-danger="effective_connection_state == 'failed'"
+                       decoration-muted="effective_connection_state in ('disabled','controller_offline')"/>
+                <field name="controller_runtime_state" widget="badge"
+                       decoration-success="controller_runtime_state == 'online'"
+                       decoration-warning="controller_runtime_state == 'warning'"
+                       decoration-danger="controller_runtime_state == 'error'"
+                       decoration-muted="controller_runtime_state == 'offline'"/>
+                <field name="connection_state" widget="badge"/>
+                <field name="last_user_sync_progress_percent" widget="progressbar"/>
+                <field name="last_user_sync_state" widget="badge"/>
+                <field name="last_fingerprint_pull_progress_percent" widget="progressbar"/>
+                <field name="last_fingerprint_pull_state" widget="badge"/>
+                <field name="last_user_sync_current_step"/>
+                <field name="last_connect_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_device_form" model="ir.ui.view">
+        <field name="name">entry.control.device.form</field>
+        <field name="model">entry.control.device</field>
+        <field name="arch" type="xml">
+            <form string="Device">
+                <header>
+                    <button name="action_connect_device" type="object" string="Connect Device" class="btn-primary" invisible="not enabled"/>
+                    <button name="action_check_device_status" type="object" string="Check Agent Status"/>
+                    <button name="action_check_full_sync_job_status" type="object" string="Refresh Sync Progress"/>
+                    <button name="action_push_all_fingerprints" type="object" string="Push All Fingerprints" class="btn-secondary" invisible="not enabled"/>
+                    <button name="action_pull_all_fingerprints" type="object" string="Pull All Fingerprints" class="btn-secondary" invisible="not enabled"/>
+                    <button name="action_refresh_fingerprint_pull_progress" type="object" string="Refresh Fingerprint Progress" class="btn-secondary"/>
+                    <button name="action_retry_fingerprint_pull_job" type="object" string="Retry Fingerprint Pull" class="btn-secondary"/>
+                    <button name="action_view_sync_jobs" type="object" string="View Jobs" class="btn-secondary"/>
+                    <button name="action_disconnect_controller" type="object" string="Disconnect Controller" class="btn-secondary"/>
+                    <button name="action_disable_device" type="object" string="Disable Device" invisible="not enabled"/>
+                    <button name="action_enable_device" type="object" string="Enable Device" invisible="enabled"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Device">
+                            <field name="controller_id"/>
+                            <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                            <field name="device_code"/>
+                            <field name="enabled"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Connection">
+                            <field name="device_ip"/>
+                            <field name="device_port"/>
+                            <field name="comm_key" password="True"/>
+                            <field name="machine_number"/>
+                        </group>
+                    </group>
+                    <group string="Policy">
+                        <field name="is_primary"/>
+                        <field name="sync_users"/>
+                    </group>
+                    <group string="Agent Diagnostic">
+                        <field name="serial_number" readonly="1"/>
+                        <field name="platform" readonly="1"/>
+                        <field name="firmware_version" readonly="1"/>
+                        <field name="mac_address" readonly="1"/>
+                        <field name="agent_device_endpoint" readonly="1"/>
+                        <field name="last_diagnostic_at" readonly="1"/>
+                        <field name="last_diagnostic_message" readonly="1"/>
+                    </group>
+                    <group string="Status">
+                        <field name="effective_connection_state" widget="badge" readonly="1"
+                               decoration-success="effective_connection_state == 'connected'"
+                               decoration-warning="effective_connection_state in ('unknown','disconnected')"
+                               decoration-danger="effective_connection_state == 'failed'"
+                               decoration-muted="effective_connection_state in ('disabled','controller_offline')"/>
+                        <field name="effective_connection_message" readonly="1"/>
+                        <field name="controller_runtime_state" widget="badge" readonly="1"
+                               decoration-success="controller_runtime_state == 'online'"
+                               decoration-warning="controller_runtime_state == 'warning'"
+                               decoration-danger="controller_runtime_state == 'error'"
+                               decoration-muted="controller_runtime_state == 'offline'"/>
+                        <field name="controller_last_heartbeat_at" readonly="1"/>
+                        <field name="connection_state" widget="badge" readonly="1"/>
+                        <field name="last_connect_at" readonly="1"/>
+                        <field name="last_connect_message" readonly="1"/>
+                        <field name="last_status_at" readonly="1"/>
+                        <field name="last_status_message" readonly="1"/>
+                        <field name="last_user_sync_progress_percent" widget="progressbar" readonly="1"/>
+                        <field name="last_user_sync_processed_count" readonly="1"/>
+                        <field name="last_user_sync_total_count" readonly="1"/>
+                        <field name="last_user_sync_current_step" readonly="1"/>
+                        <field name="last_user_sync_current_pin" readonly="1"/>
+                        <field name="last_user_sync_at" readonly="1"/>
+                        <field name="last_user_sync_state" readonly="1"/>
+                        <field name="last_user_sync_job_id" readonly="1"/>
+                        <field name="last_user_sync_requested_count" readonly="1"/>
+                        <field name="last_user_sync_upserted_count" readonly="1"/>
+                        <field name="last_user_sync_deleted_count" readonly="1"/>
+                        <field name="last_user_sync_failed_count" readonly="1"/>
+                        <field name="last_user_sync_message" readonly="1"/>
+                        <field name="last_biometric_at" readonly="1"/>
+                        <field name="last_biometric_message" readonly="1"/>
+                        <field name="last_fingerprint_pull_progress_percent" widget="progressbar" readonly="1"/>
+                        <field name="last_fingerprint_pull_state" readonly="1"/>
+                        <field name="last_fingerprint_pull_job_id" readonly="1"/>
+                        <field name="last_fingerprint_pull_processed_users" readonly="1"/>
+                        <field name="last_fingerprint_pull_total_users" readonly="1"/>
+                        <field name="last_fingerprint_pull_imported_templates" readonly="1"/>
+                        <field name="last_fingerprint_pull_updated_templates" readonly="1"/>
+                        <field name="last_fingerprint_pull_skipped_templates" readonly="1"/>
+                        <field name="last_fingerprint_pull_failed_users" readonly="1"/>
+                        <field name="last_fingerprint_pull_current_step" readonly="1"/>
+                        <field name="last_fingerprint_pull_current_pin" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_entry_control_device" model="ir.actions.act_window">
+        <field name="name">Devices</field>
+        <field name="res_model">entry.control.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== Users ===================== -->
+    <record id="view_entry_control_user_search" model="ir.ui.view">
+        <field name="name">entry.control.user.search</field>
+        <field name="model">entry.control.user</field>
+        <field name="arch" type="xml">
+            <search string="Entry Control Users">
+                <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                <field name="pin"/>
+                <field name="card_no"/>
+                <field name="employee_id"/>
+                <filter string="Enabled" name="enabled" domain="[('enabled','=',True)]"/>
+                <filter string="Sync Enabled" name="sync_enabled" domain="[('sync_enabled','=',True)]"/>
+                <filter string="Group by Sync State" name="group_by_sync_state" context="{'group_by':'last_sync_state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_user_list" model="ir.ui.view">
+        <field name="name">entry.control.user.list</field>
+        <field name="model">entry.control.user</field>
+        <field name="arch" type="xml">
+            <list string="Entry Control Users"
+                  decoration-success="last_sync_state == 'success'"
+                  decoration-danger="last_sync_state == 'failed'">
+                <header>
+                    <button name="action_generate_from_employees" type="object" string="Generate Device Users" class="btn-primary" display="always"/>
+                </header>
+                <field name="enabled"/>
+                <field name="sync_enabled"/>
+                <field name="pin"/>
+                <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                <field name="card_no"/>
+                <field name="privilege"/>
+                <field name="employee_id"/>
+                <field name="last_sync_state" widget="badge"/>
+                <field name="last_sync_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_user_form" model="ir.ui.view">
+        <field name="name">entry.control.user.form</field>
+        <field name="model">entry.control.user</field>
+        <field name="arch" type="xml">
+            <form string="Entry Control User">
+                <header>
+                    <button name="action_sync_to_devices" type="object" string="Sync to Device(s)" class="btn-primary"/>
+                    <button name="action_create_fingerprint_index_0" type="object" string="Create Finger Slots 0-9"/>
+                    <button name="action_disable_on_devices" type="object" string="Disable on Device(s)"/>
+                    <button name="action_enable_on_devices" type="object" string="Enable on Device(s)"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="User">
+                            <field name="employee_id"/>
+                            <field name="pin" readonly="employee_id"/>
+                            <field name="name" placeholder="Max: Nguyễn Thị Minh Kha"/>
+                            <field name="password" password="True"/>
+                            <field name="card_no"/>
+                        </group>
+                        <group string="Device Settings">
+                            <field name="privilege"/>
+                            <field name="access_group_no"/>
+                            <field name="access_timezone_id"/>
+                            <field name="enabled"/>
+                            <field name="sync_enabled"/>
+                        </group>
+                    </group>
+                    <group string="Last Sync">
+                        <field name="last_sync_state" readonly="1"/>
+                        <field name="last_sync_at" readonly="1"/>
+                        <field name="last_sync_device_id" readonly="1"/>
+                        <field name="last_sync_message" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Biometrics">
+                            <field name="biometric_ids">
+                                <list editable="bottom">
+                                    <field name="biometric_type"/>
+                                    <field name="finger_index"/>
+                                    <field name="algorithm"/>
+                                    <field name="flag"/>
+                                    <field name="source_device_id"/>
+                                    <field name="template_length"/>
+                <field name="template_hash"/>
+                                    <field name="sync_state" widget="badge"/>
+                                    <field name="last_sync_at"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_entry_control_user" model="ir.actions.act_window">
+        <field name="name">Device Users</field>
+        <field name="res_model">entry.control.user</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="server_action_generate_device_users_from_employees" model="ir.actions.server">
+        <field name="name">Generate Device Users</field>
+        <field name="model_id" ref="model_entry_control_user"/>
+        <field name="binding_model_id" ref="model_entry_control_user"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">action = model.action_generate_from_employees()</field>
+    </record>
+
+
+    <!-- ===================== Biometrics ===================== -->
+    <record id="view_entry_control_biometric_search" model="ir.ui.view">
+        <field name="name">entry.control.biometric.search</field>
+        <field name="model">entry.control.biometric</field>
+        <field name="arch" type="xml">
+            <search string="Biometric Templates">
+                <field name="user_id"/>
+                <field name="employee_id"/>
+                <field name="source_device_id"/>
+                <filter string="Fingerprint" name="fingerprint" domain="[('biometric_type','=','fingerprint')]"/>
+                <filter string="Pulled" name="pulled" domain="[('sync_state','=','pulled')]"/>
+                <filter string="Failed" name="failed" domain="[('sync_state','=','failed')]"/>
+                <filter string="Group by User" name="group_by_user" context="{'group_by':'user_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_biometric_list" model="ir.ui.view">
+        <field name="name">entry.control.biometric.list</field>
+        <field name="model">entry.control.biometric</field>
+        <field name="arch" type="xml">
+            <list string="Biometric Templates"
+                  decoration-success="sync_state == 'pulled'"
+                  decoration-danger="sync_state == 'failed'">
+                <field name="user_id"/>
+                <field name="employee_id"/>
+                <field name="biometric_type"/>
+                <field name="finger_index"/>
+                <field name="algorithm"/>
+                <field name="template_length"/>
+                <field name="template_hash"/>
+                <field name="source_device_id"/>
+                <field name="sync_state" widget="badge"/>
+                <field name="last_sync_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_biometric_form" model="ir.ui.view">
+        <field name="name">entry.control.biometric.form</field>
+        <field name="model">entry.control.biometric</field>
+        <field name="arch" type="xml">
+            <form string="Biometric Template">
+                <header>
+                    <button name="action_connect_source_device" type="object" string="Connect Selected Device" class="btn-secondary"/>
+                    <button name="action_pull_from_device" type="object" string="Pull Fingerprint from Selected Device" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="User">
+                            <field name="user_id"/>
+                            <field name="employee_id" readonly="1"/>
+                        </group>
+                        <group string="Fingerprint">
+                            <field name="biometric_type"/>
+                            <field name="finger_index"/>
+                            <field name="algorithm"/>
+                            <field name="flag"/>
+                        </group>
+                    </group>
+                    <group string="Source Device">
+                        <field name="source_device_id" required="1"/>
+                    </group>
+                    <group string="Template">
+                        <field name="template_length" readonly="1"/>
+                        <field name="template_data" nolabel="1" readonly="1" class="o_entry_control_template_data" placeholder="Fingerprint template string is read-only and will be stored here after pulling from device."/>
+                    </group>
+                    <group string="Last Sync">
+                        <field name="sync_state" readonly="1"/>
+                        <field name="last_sync_at" readonly="1"/>
+                        <field name="last_sync_device_id" readonly="1"/>
+                        <field name="last_sync_message" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_entry_control_biometric" model="ir.actions.act_window">
+        <field name="name">Biometric Templates</field>
+        <field name="res_model">entry.control.biometric</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+
+    <!-- ===================== Unified Sync Jobs ===================== -->
+    <record id="view_entry_control_sync_job_search" model="ir.ui.view">
+        <field name="name">entry.control.sync.job.search</field>
+        <field name="model">entry.control.sync.job</field>
+        <field name="arch" type="xml">
+            <search string="Sync Jobs">
+                <field name="job_uid"/>
+                <field name="job_type"/>
+                <field name="device_id"/>
+                <field name="controller_id"/>
+                <field name="state"/>
+                <filter string="Running" name="running" domain="[('state','=','running')]"/>
+                <filter string="Failed" name="failed" domain="[('state','=','failed')]"/>
+                <filter string="Completed" name="completed" domain="[('state','in',['success','completed','partial_success'])]"/>
+                <separator/>
+                <filter string="User Sync" name="job_type_user_sync" domain="[('job_type','=','user_sync')]"/>
+                <filter string="Fingerprint Pull" name="job_type_fingerprint_pull" domain="[('job_type','=','fingerprint_pull')]"/>
+                <filter string="Group by Type" name="group_by_type" context="{'group_by':'job_type'}"/>
+                <filter string="Group by Device" name="group_by_device" context="{'group_by':'device_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_sync_job_list" model="ir.ui.view">
+        <field name="name">entry.control.sync.job.list</field>
+        <field name="model">entry.control.sync.job</field>
+        <field name="arch" type="xml">
+            <list string="Sync Jobs" decoration-success="state in ('success','completed')" decoration-warning="state == 'partial_success'" decoration-danger="state == 'failed'" decoration-muted="state == 'cancelled'">
+                <field name="create_date"/>
+                <field name="job_uid"/>
+                <field name="job_type" widget="badge"/>
+                <field name="device_id"/>
+                <field name="state" widget="badge"
+                       decoration-success="state in ('success','completed')"
+                       decoration-warning="state in ('queued','running','partial_success')"
+                       decoration-danger="state == 'failed'"
+                       decoration-muted="state == 'cancelled'"/>
+                <field name="progress_percent" widget="progressbar"/>
+                <field name="processed_items"/>
+                <field name="total_items"/>
+                <field name="success_count"/>
+                <field name="failed_count"/>
+                <field name="current_step"/>
+                <field name="current_pin"/>
+                <field name="last_update_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_sync_job_form" model="ir.ui.view">
+        <field name="name">entry.control.sync.job.form</field>
+        <field name="model">entry.control.sync.job</field>
+        <field name="arch" type="xml">
+            <form string="Sync Job" create="false">
+                <header>
+                    <button name="action_refresh_progress" type="object" string="Refresh Progress" class="btn-primary"/>
+                    <button name="action_retry_resume" type="object" string="Retry / Resume" class="btn-secondary" invisible="job_type != 'fingerprint_pull'"/>
+                    <button name="action_view_lines" type="object" string="View Lines" class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="queued,running,success,completed,partial_success,failed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Job">
+                            <field name="name" readonly="1"/>
+                            <field name="job_uid" readonly="1"/>
+                            <field name="job_type" readonly="1"/>
+                            <field name="device_id" readonly="1"/>
+                            <field name="controller_id" readonly="1"/>
+                            <field name="legacy_model" readonly="1"/>
+                            <field name="legacy_res_id" readonly="1"/>
+                        </group>
+                        <group string="Progress">
+                            <field name="progress_percent" widget="progressbar" readonly="1"/>
+                            <field name="processed_items" readonly="1"/>
+                            <field name="total_items" readonly="1"/>
+                            <field name="current_step" readonly="1"/>
+                            <field name="current_pin" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="User Sync Result" invisible="job_type != 'user_sync'">
+                        <field name="requested_count" readonly="1"/>
+                        <field name="created_or_updated_count" readonly="1"/>
+                        <field name="deleted_count" readonly="1"/>
+                        <field name="preserved_count" readonly="1"/>
+                        <field name="failed_count" readonly="1"/>
+                        <field name="device_user_count_before" readonly="1"/>
+                        <field name="device_user_count_after" readonly="1"/>
+                    </group>
+                    <group string="Fingerprint Pull Result" invisible="job_type != 'fingerprint_pull'">
+                        <field name="batch_size" readonly="1"/>
+                        <field name="last_batch_no" readonly="1"/>
+                        <field name="total_templates" readonly="1"/>
+                        <field name="sent_templates" readonly="1"/>
+                        <field name="imported_templates" readonly="1"/>
+                        <field name="updated_templates" readonly="1"/>
+                        <field name="skipped_templates" readonly="1"/>
+                        <field name="failed_users" readonly="1"/>
+                    </group>
+                    <group string="Time">
+                        <field name="started_at" readonly="1"/>
+                        <field name="finished_at" readonly="1"/>
+                        <field name="last_update_at" readonly="1"/>
+                    </group>
+                    <group string="Message">
+                        <field name="message" readonly="1"/>
+                        <field name="last_error" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Lines">
+                            <field name="line_ids" readonly="1">
+                                <list decoration-success="state in ('success','imported','updated','deleted')" decoration-danger="state == 'failed'" decoration-muted="state == 'skipped'">
+                                    <field name="batch_no"/>
+                                    <field name="pin"/>
+                                    <field name="item_type"/>
+                                    <field name="finger_index"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="template_length"/>
+                                    <field name="template_hash"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Payload" groups="base.group_system">
+                            <group>
+                                <field name="request_payload" readonly="1"/>
+                                <field name="result_payload" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_entry_control_sync_line_list" model="ir.ui.view">
+        <field name="name">entry.control.sync.line.list</field>
+        <field name="model">entry.control.sync.line</field>
+        <field name="arch" type="xml">
+            <list string="Sync Job Lines" decoration-success="state in ('success','imported','updated','deleted')" decoration-danger="state == 'failed'" decoration-muted="state == 'skipped'">
+                <field name="job_id"/>
+                <field name="batch_no"/>
+                <field name="pin"/>
+                <field name="item_type"/>
+                <field name="finger_index"/>
+                <field name="state" widget="badge"/>
+                <field name="template_length"/>
+                <field name="template_hash"/>
+                <field name="message"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_entry_control_sync_job" model="ir.actions.act_window">
+        <field name="name">Sync Jobs</field>
+        <field name="res_model">entry.control.sync.job</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_group_by_type': 1}</field>
+    </record>
+
+    <record id="action_entry_control_sync_line" model="ir.actions.act_window">
+        <field name="name">Sync Job Lines</field>
+        <field name="res_model">entry.control.sync.line</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================== Fingerprint Pull Jobs ===================== -->
+    <record id="view_entry_control_biometric_pull_job_search" model="ir.ui.view">
+        <field name="name">entry.control.biometric.pull.job.search</field>
+        <field name="model">entry.control.biometric.pull.job</field>
+        <field name="arch" type="xml">
+            <search string="Fingerprint Pull Jobs">
+                <field name="job_id"/>
+                <field name="device_id"/>
+                <field name="state"/>
+                <filter string="Running" name="running" domain="[('state','=','running')]"/>
+                <filter string="Failed" name="failed" domain="[('state','=','failed')]"/>
+                <filter string="Completed" name="completed" domain="[('state','in',['completed','partial_success'])]"/>
+                <filter string="Group by Device" name="group_by_device" context="{'group_by':'device_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_biometric_pull_job_list" model="ir.ui.view">
+        <field name="name">entry.control.biometric.pull.job.list</field>
+        <field name="model">entry.control.biometric.pull.job</field>
+        <field name="arch" type="xml">
+            <list string="Fingerprint Pull Jobs" decoration-success="state == 'completed'" decoration-warning="state == 'partial_success'" decoration-danger="state == 'failed'">
+                <field name="create_date"/>
+                <field name="job_id"/>
+                <field name="device_id"/>
+                <field name="state" widget="badge"/>
+                <field name="progress_percent" widget="progressbar"/>
+                <field name="processed_users"/>
+                <field name="total_users"/>
+                <field name="sent_templates"/>
+                <field name="imported_templates"/>
+                <field name="updated_templates"/>
+                <field name="skipped_templates"/>
+                <field name="failed_users"/>
+                <field name="current_step"/>
+                <field name="current_pin"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_biometric_pull_job_form" model="ir.ui.view">
+        <field name="name">entry.control.biometric.pull.job.form</field>
+        <field name="model">entry.control.biometric.pull.job</field>
+        <field name="arch" type="xml">
+            <form string="Fingerprint Pull Job" create="false">
+                <header>
+                    <button name="action_refresh_progress" type="object" string="Refresh Progress" class="btn-primary"/>
+                    <button name="action_retry_resume" type="object" string="Retry / Resume" class="btn-secondary"/>
+                    <button name="action_view_lines" type="object" string="View Lines" class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="queued,running,completed,partial_success,failed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Job">
+                            <field name="name"/>
+                            <field name="job_id" readonly="1"/>
+                            <field name="device_id" readonly="1"/>
+                            <field name="controller_id" readonly="1"/>
+                            <field name="batch_size" readonly="1"/>
+                        </group>
+                        <group string="Progress">
+                            <field name="progress_percent" widget="progressbar" readonly="1"/>
+                            <field name="processed_users" readonly="1"/>
+                            <field name="total_users" readonly="1"/>
+                            <field name="current_step" readonly="1"/>
+                            <field name="current_pin" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Result">
+                        <field name="total_templates" readonly="1"/>
+                        <field name="sent_templates" readonly="1"/>
+                        <field name="imported_templates" readonly="1"/>
+                        <field name="updated_templates" readonly="1"/>
+                        <field name="skipped_templates" readonly="1"/>
+                        <field name="failed_users" readonly="1"/>
+                        <field name="last_batch_no" readonly="1"/>
+                    </group>
+                    <group string="Time">
+                        <field name="started_at" readonly="1"/>
+                        <field name="finished_at" readonly="1"/>
+                        <field name="last_update_at" readonly="1"/>
+                    </group>
+                    <group string="Message">
+                        <field name="message" readonly="1"/>
+                        <field name="last_error" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Lines">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="batch_no"/>
+                                    <field name="pin"/>
+                                    <field name="user_id"/>
+                                    <field name="finger_index"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="template_length"/>
+                                    <field name="template_hash"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_entry_control_biometric_pull_line_list" model="ir.ui.view">
+        <field name="name">entry.control.biometric.pull.line.list</field>
+        <field name="model">entry.control.biometric.pull.line</field>
+        <field name="arch" type="xml">
+            <list string="Fingerprint Pull Lines" decoration-success="state in ('imported','updated')" decoration-danger="state == 'failed'" decoration-muted="state == 'skipped'">
+                <field name="job_id"/>
+                <field name="batch_no"/>
+                <field name="pin"/>
+                <field name="user_id"/>
+                <field name="finger_index"/>
+                <field name="state" widget="badge"/>
+                <field name="template_length"/>
+                <field name="template_hash"/>
+                <field name="biometric_id"/>
+                <field name="message"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_entry_control_biometric_pull_job" model="ir.actions.act_window">
+        <field name="name">Fingerprint Pull Jobs</field>
+        <field name="res_model">entry.control.biometric.pull.job</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_entry_control_biometric_pull_line" model="ir.actions.act_window">
+        <field name="name">Fingerprint Pull Lines</field>
+        <field name="res_model">entry.control.biometric.pull.line</field>
+        <field name="view_mode">list</field>
+    </record>
+
+
+    <!-- ===================== Security Events ===================== -->
+    <record id="view_entry_control_security_event_search" model="ir.ui.view">
+        <field name="name">entry.control.security.event.search</field>
+        <field name="model">entry.control.security.event</field>
+        <field name="arch" type="xml">
+            <search string="Security Events">
+                <field name="payload_controller_id"/>
+                <field name="source_ip"/>
+                <field name="event_type"/>
+                <filter string="Group by Type" name="group_by_type" context="{'group_by':'event_type'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_entry_control_security_event_list" model="ir.ui.view">
+        <field name="name">entry.control.security.event.list</field>
+        <field name="model">entry.control.security.event</field>
+        <field name="arch" type="xml">
+            <list string="Entry Control Security Events" decoration-danger="1">
+                <field name="create_date"/>
+                <field name="event_type" widget="badge"/>
+                <field name="payload_controller_id"/>
+                <field name="source_ip"/>
+                <field name="message"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_security_event_form" model="ir.ui.view">
+        <field name="name">entry.control.security.event.form</field>
+        <field name="model">entry.control.security.event</field>
+        <field name="arch" type="xml">
+            <form string="Security Event" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="create_date"/>
+                            <field name="event_type"/>
+                                        <field name="payload_controller_id"/>
+                            <field name="source_ip"/>
+                        </group>
+                        <group>
+                            <field name="message"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Raw Payload">
+                            <field name="raw_payload" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_entry_control_security_event" model="ir.actions.act_window">
+        <field name="name">Security Events</field>
+        <field name="res_model">entry.control.security.event</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

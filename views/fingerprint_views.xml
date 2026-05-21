@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_fingerprint_list" model="ir.ui.view">
+        <field name="name">entry.control.fingerprint.list</field>
+        <field name="model">entry.control.fingerprint</field>
+        <field name="arch" type="xml">
+            <list string="Fingerprints" create="0" edit="1">
+                <field name="pin"/>
+                <field name="user_id"/>
+                <field name="finger_index"/>
+                <field name="template_version"/>
+                <field name="template_hash_short"/>
+                <field name="template_length"/>
+                <field name="status"/>
+                <field name="source_device_code"/>
+                <field name="last_collected_at"/>
+                <field name="last_pushed_at"/>
+                <field name="server_version"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_entry_control_fingerprint_form" model="ir.ui.view">
+        <field name="name">entry.control.fingerprint.form</field>
+        <field name="model">entry.control.fingerprint</field>
+        <field name="arch" type="xml">
+            <form string="Fingerprint">
+                <header>
+                    <button name="action_approve_pending" type="object" string="Approve Pending Template" class="btn-primary" invisible="status != 'pending_review'"/>
+                    <button name="action_reject_pending" type="object" string="Reject Pending" invisible="status != 'pending_review'"/>
+                    <button name="action_push_to_devices" type="object" string="Push to Devices" class="btn-secondary" invisible="status != 'active'"/>
+                    <button name="action_disable" type="object" string="Disable" invisible="status != 'active'"/>
+                    <button name="action_delete_fingerprint" type="object" string="Delete from Devices" class="btn-danger" invisible="status == 'deleted'"/>
+                    <field name="status" widget="statusbar" statusbar_visible="pending_review,active,disabled,deleted,rejected"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="pin" readonly="1"/>
+                            <field name="finger_index" readonly="1"/>
+                            <field name="template_version" readonly="1"/>
+                            <field name="server_version" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="source_device_id" readonly="1"/>
+                            <field name="source_device_code" readonly="1"/>
+                            <field name="last_collected_at" readonly="1"/>
+                            <field name="last_pushed_at" readonly="1"/>
+                            <field name="last_deleted_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Active Server Master">
+                        <field name="template_hash_short" readonly="1"/>
+                        <field name="template_length" readonly="1"/>
+                        <field name="template_base64" readonly="1" nolabel="1" invisible="1"/>
+                    </group>
+                    <group string="Pending Candidate from Device" invisible="not pending_template_hash">
+                        <field name="pending_template_hash_short" readonly="1"/>
+                        <field name="pending_template_length" readonly="1"/>
+                        <field name="pending_source_device_id" readonly="1"/>
+                        <field name="pending_source_device_code" readonly="1"/>
+                        <field name="pending_collected_at" readonly="1"/>
+                        <field name="pending_template_base64" readonly="1" nolabel="1" invisible="1"/>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_entry_control_fingerprint_search" model="ir.ui.view">
+        <field name="name">entry.control.fingerprint.search</field>
+        <field name="model">entry.control.fingerprint</field>
+        <field name="arch" type="xml">
+            <search string="Fingerprints">
+                <field name="pin"/>
+                <field name="user_id"/>
+                <field name="template_hash"/>
+                <filter name="active" string="Active" domain="[('status','=','active')]"/>
+                <filter name="pending_review" string="Pending Review" domain="[('status','=','pending_review')]"/>
+                <filter name="deleted" string="Deleted" domain="[('status','=','deleted')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_entry_control_fingerprint" model="ir.actions.act_window">
+        <field name="name">Fingerprints</field>
+        <field name="res_model">entry.control.fingerprint</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_fingerprint_search"/>
+    </record>
+</odoo>

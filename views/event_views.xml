@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_entry_control_event_list" model="ir.ui.view">
+        <field name="name">entry.control.event.list</field>
+        <field name="model">entry.control.event</field>
+        <field name="arch" type="xml">
+            <list string="Incoming Events" create="0" edit="1">
+                <field name="received_at"/>
+                <field name="event_id"/>
+                <field name="controller_id"/>
+                <field name="event_type"/>
+                <field name="aggregate_type"/>
+                <field name="aggregate_id_short"/>
+                <field name="status"/>
+                <field name="processed_at"/>
+                <field name="last_error"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_entry_control_event_form" model="ir.ui.view">
+        <field name="name">entry.control.event.form</field>
+        <field name="model">entry.control.event</field>
+        <field name="arch" type="xml">
+            <form string="Incoming Event">
+                <header>
+                    <button name="action_reprocess" type="object" string="Reprocess" class="btn-primary" invisible="status not in ('failed','received')"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="event_id" readonly="1"/>
+                            <field name="controller_id"/>
+                            <field name="event_type"/>
+                            <field name="aggregate_type"/>
+                            <field name="aggregate_id_short"/>
+                        </group>
+                        <group>
+                            <field name="status"/>
+                            <field name="retry_count"/>
+                            <field name="received_at"/>
+                            <field name="processed_at"/>
+                            <field name="last_error"/>
+                        </group>
+                    </group>
+                    <field name="payload"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="view_entry_control_event_search" model="ir.ui.view">
+        <field name="name">entry.control.event.search</field>
+        <field name="model">entry.control.event</field>
+        <field name="arch" type="xml">
+            <search string="Incoming Events">
+                <field name="event_id"/>
+                <field name="controller_id"/>
+                <field name="event_type"/>
+                <filter name="received" string="Received" domain="[('status','=','received')]"/>
+                <filter name="processed" string="Processed" domain="[('status','=','processed')]"/>
+                <filter name="failed" string="Failed" domain="[('status','=','failed')]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_entry_control_event" model="ir.actions.act_window">
+        <field name="name">Incoming Events</field>
+        <field name="res_model">entry.control.event</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_entry_control_event_search"/>
+    </record>
+</odoo>
