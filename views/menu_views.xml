@@ -15,7 +15,6 @@
               action="action_entry_control_user"
               sequence="10"/>
 
-
     <menuitem id="menu_entry_control_fingerprints"
               name="Fingerprints"
               parent="menu_entry_control_operation"
@@ -44,10 +43,4 @@
               parent="menu_entry_control_integration"
               action="action_entry_control_device"
               sequence="20"/>
-
-    <menuitem id="menu_entry_control_conflicts"
-              name="Sync Conflicts"
-              parent="menu_entry_control_integration"
-              action="action_entry_control_conflict"
-              sequence="50"/>
 </odoo>

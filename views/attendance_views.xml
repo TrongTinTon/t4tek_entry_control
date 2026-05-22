@@ -4,61 +4,100 @@
         <field name="name">entry.control.attendance.log.list</field>
         <field name="model">entry.control.attendance.log</field>
         <field name="arch" type="xml">
-            <list string="Attendance Logs" create="0" edit="1">
+            <list string="Attendance Logs" create="0" edit="1" decoration-danger="sync_status == 'failed'" decoration-success="sync_status == 'synced'" decoration-muted="sync_status == 'duplicate'">
                 <field name="check_time"/>
+                <field name="check_time_timezone"/>
                 <field name="pin"/>
-                <field name="user_id"/>
+                <field name="employee_id"/>
                 <field name="device_code"/>
                 <field name="controller_id"/>
-                <field name="check_type"/>
-                <field name="verify_type"/>
+                <field name="attendance_direction"/>
+                <field name="verify_method"/>
                 <field name="work_code"/>
                 <field name="sync_status"/>
-                <field name="event_hash"/>
+                <field name="sync_message"/>
+                <field name="sync_error_message"/>
+                <field name="hr_attendance_id"/>
             </list>
         </field>
     </record>
+
     <record id="view_entry_control_attendance_log_form" model="ir.ui.view">
         <field name="name">entry.control.attendance.log.form</field>
         <field name="model">entry.control.attendance.log</field>
         <field name="arch" type="xml">
             <form string="Attendance Log">
+                <header>
+                    <button name="action_sync_hr_attendance" type="object" string="Re-sync Attendances" class="btn-primary" invisible="sync_status == 'synced'"/>
+                    <field name="sync_status" widget="statusbar" statusbar_visible="received,synced,duplicate,failed"/>
+                </header>
                 <sheet>
                     <group>
-                        <group>
-                            <field name="check_time"/>
-                            <field name="pin"/>
-                            <field name="user_id"/>
-                            <field name="device_code"/>
-                            <field name="device_id"/>
-                            <field name="controller_id"/>
+                        <group string="Source">
+                            <field name="controller_id" readonly="1"/>
+                            <field name="device_id" readonly="1"/>
+                            <field name="device_code" readonly="1"/>
+                            <field name="pin" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="employee_id" readonly="1"/>
                         </group>
-                        <group>
-                            <field name="check_type"/>
-                            <field name="verify_type"/>
-                            <field name="work_code"/>
-                            <field name="event_hash" readonly="1"/>
-                            <field name="sync_status"/>
+                        <group string="Time">
+                            <field name="check_time" readonly="1"/>
+                            <field name="check_time_utc" readonly="1"/>
+                            <field name="check_time_raw" readonly="1"/>
+                            <field name="check_time_timezone" readonly="1"/>
                         </group>
                     </group>
-                    <field name="raw_data"/>
+                    <group>
+                        <group string="Punch Detail">
+                            <field name="attendance_direction" readonly="1"/>
+                            <field name="check_type" readonly="1"/>
+                            <field name="verify_type" readonly="1"/>
+                            <field name="verify_method" readonly="1"/>
+                            <field name="verify_method_label" readonly="1"/>
+                            <field name="work_code" readonly="1"/>
+                        </group>
+                        <group string="Sync Result">
+                            <field name="hr_attendance_id" readonly="1"/>
+                            <field name="synced_at" readonly="1"/>
+                            <field name="sync_message" readonly="1"/>
+                            <field name="sync_error_message" readonly="1" class="text-danger"/>
+                            <field name="event_hash" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Raw Data">
+                            <field name="raw_data" readonly="1"/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
+
     <record id="view_entry_control_attendance_log_search" model="ir.ui.view">
         <field name="name">entry.control.attendance.log.search</field>
         <field name="model">entry.control.attendance.log</field>
         <field name="arch" type="xml">
             <search string="Attendance Logs">
                 <field name="pin"/>
+                <field name="employee_id"/>
                 <field name="device_code"/>
-                <field name="event_hash"/>
-                <filter name="today" string="Today" domain="[('check_time','&gt;=', context_today().strftime('%Y-%m-%d 00:00:00'))]"/>
+                <field name="controller_id"/>
                 <filter name="received" string="Received" domain="[('sync_status','=','received')]"/>
+                <filter name="synced" string="Synced" domain="[('sync_status','=','synced')]"/>
+                <filter name="failed" string="Failed" domain="[('sync_status','=','failed')]"/>
+                <filter name="duplicate_status" string="Duplicate" domain="[('sync_status','=','duplicate')]"/>
+                <separator/>
+                <filter name="group_controller" string="Controller" context="{'group_by': 'controller_id'}"/>
+                <filter name="group_device" string="Device" context="{'group_by': 'device_code'}"/>
+                <filter name="group_employee" string="Employee" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_method" string="Verify Method" context="{'group_by': 'verify_method'}"/>
+                <filter name="group_status" string="Sync Status" context="{'group_by': 'sync_status'}"/>
             </search>
         </field>
     </record>
+
     <record id="action_entry_control_attendance_log" model="ir.actions.act_window">
         <field name="name">Attendance Logs</field>
         <field name="res_model">entry.control.attendance.log</field>

@@ -5,9 +5,6 @@
         <field name="model">entry.control.user</field>
         <field name="arch" type="xml">
             <list string="Device Users" create="1" edit="1">
-                <header>
-                    <button name="%(action_entry_control_generate_users_wizard)d" type="action" string="Generate from Employees" class="btn-primary" display="always"/>
-                </header>
                 <field name="employee_id"/>
                 <field name="pin"/>
                 <field name="name"/>
@@ -21,35 +18,31 @@
             </list>
         </field>
     </record>
+
     <record id="view_entry_control_user_form" model="ir.ui.view">
         <field name="name">entry.control.user.form</field>
         <field name="model">entry.control.user</field>
         <field name="arch" type="xml">
             <form string="Device User">
-                <header>
-                    <button name="%(action_entry_control_generate_users_wizard)d" type="action" string="Generate from Employees" class="btn-primary" display="always"/>
-                </header>
                 <sheet>
                     <group>
-                        <group>
+                        <group string="Employee Mapping">
                             <field name="employee_id"/>
                             <field name="pin" readonly="employee_id"/>
                             <field name="name"/>
-                            <field name="password" password="True"/>
                             <field name="card_no"/>
                         </group>
-                        <group>
+                        <group string="Device Policy">
                             <field name="privilege"/>
                             <field name="group_no"/>
                             <field name="timezone_no"/>
                             <field name="is_active"/>
                             <field name="is_deleted"/>
-                            <field name="fingerprint_count" readonly="1"/>
                         </group>
                     </group>
-                    <group string="Sync rule">
+                    <group>
                         <div class="text-muted" colspan="2">
-                            Device Users are the desired-state master data. Controllers pull /api/entry_control/v1/sync/manifest by last_sync_version, compare local/device state, then execute only the required delta jobs. PIN is referenced from Employee PIN when an Employee is selected.
+                            Device Users are created automatically when an Employee has a PIN Code. The PIN is referenced from Employee PIN and used by Controllers in the desired-state manifest.
                         </div>
                     </group>
                     <notebook>
@@ -75,6 +68,7 @@
             </form>
         </field>
     </record>
+
     <record id="view_entry_control_user_search" model="ir.ui.view">
         <field name="name">entry.control.user.search</field>
         <field name="model">entry.control.user</field>
@@ -90,6 +84,7 @@
             </search>
         </field>
     </record>
+
     <record id="action_entry_control_user" model="ir.actions.act_window">
         <field name="name">Device Users</field>
         <field name="res_model">entry.control.user</field>

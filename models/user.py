@@ -204,13 +204,68 @@ class EntryControlUser(models.Model):
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
+    def _entry_control_device_user_vals(self):
+        self.ensure_one()
+        pin = str(getattr(self, "pin", "") or "").strip() if "pin" in self._fields else ""
+        if not pin:
+            return False
+        return {
+            "employee_id": self.id,
+            "pin": pin,
+            "name": self.name or self.display_name or pin,
+            "is_active": bool(getattr(self, "active", True)),
+            "is_deleted": False,
+        }
+
+    def _entry_control_sync_device_user_from_employee(self):
+        """Auto-create/update Device User from Employee PIN.
+
+        This replaces the old manual "Generate from Employees" workflow:
+        - When a new Employee has PIN, create exactly one Device User.
+        - When Employee PIN/name/active changes, update the linked Device User.
+        - If there is already a Device User with the same PIN, link it to the Employee
+          when it is not linked to another Employee.
+        """
+        DeviceUser = self.env["entry.control.user"].sudo()
+        for employee in self.sudo():
+            vals = employee._entry_control_device_user_vals()
+            if not vals:
+                continue
+            user = DeviceUser.search([("employee_id", "=", employee.id)], limit=1)
+            if not user:
+                existing_by_pin = DeviceUser.search([("pin", "=", vals["pin"])], limit=1)
+                if existing_by_pin:
+                    if existing_by_pin.employee_id and existing_by_pin.employee_id.id != employee.id:
+                        # Avoid breaking the one Employee = one Device User rule.
+                        continue
+                    user = existing_by_pin
+            if user:
+                write_vals = {
+                    "employee_id": employee.id,
+                    "pin": vals["pin"],
+                    "name": vals["name"],
+                    "is_active": vals["is_active"],
+                    "is_deleted": False,
+                }
+                user.write(write_vals)
+            else:
+                DeviceUser.create(vals)
+        return True
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Do not create or modify res.partner here. This module only mirrors
+        # Employee PIN data into entry.control.user. Partner role rules belong
+        # to the Contacts/partner customization, not Attendance Gateway.
+        employees = super().create(vals_list)
+        if "pin" in self._fields:
+            employees._entry_control_sync_device_user_from_employee()
+        return employees
+
     def write(self, vals):
-        pin_changed = "pin" in vals and "pin" in self._fields
+        watched = {"pin", "name", "active"}
+        should_sync = bool(watched.intersection(vals.keys()))
         result = super().write(vals)
-        if pin_changed:
-            DeviceUser = self.env["entry.control.user"].sudo()
-            for employee in self:
-                user = DeviceUser.search([("employee_id", "=", employee.id)], limit=1)
-                if user:
-                    user.write({"pin": str(employee.pin or "").strip()})
+        if should_sync and "pin" in self._fields:
+            self._entry_control_sync_device_user_from_employee()
         return result

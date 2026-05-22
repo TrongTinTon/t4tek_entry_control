@@ -6,6 +6,5 @@ from . import fingerprint
 from . import attendance_log
 from . import conflict
 
-from . import employee_generate_wizard
 
 from . import fingerprint_map

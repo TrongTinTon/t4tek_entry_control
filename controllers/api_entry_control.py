@@ -610,22 +610,52 @@ class EntryControlAPI(http.Controller):
             if not isinstance(logs, list):
                 return self._json_response({"ok": False, "error": "logs must be a list"}, 400)
             Attendance = request.env["entry.control.attendance.log"].sudo()
+            Device = request.env["entry.control.device"].sudo()
             created = 0
             duplicate = 0
             failed = []
             ids = []
+            results = []
+            touched_device_ids = set()
             for index, log in enumerate(logs):
                 try:
                     if not isinstance(log, dict):
                         raise ValueError("log item must be an object")
                     record, is_duplicate = Attendance.ingest_direct_log(controller, log)
                     ids.append(record.id)
+                    if record.device_id:
+                        touched_device_ids.add(record.device_id.id)
                     if is_duplicate:
                         duplicate += 1
                     else:
                         created += 1
+                    result_item = {
+                        "index": index,
+                        "attendance_log_id": record.id,
+                        "event_hash": record.event_hash,
+                        "controller_code": controller.controller_code,
+                        "device_code": record.device_code or "",
+                        "pin": record.pin or "",
+                        "employee_id": record.employee_id.id if record.employee_id else False,
+                        "hr_attendance_id": record.hr_attendance_id.id if record.hr_attendance_id else False,
+                        "sync_status": record.sync_status,
+                        "message": record.sync_error_message or record.sync_message or "",
+                        "duplicate": bool(is_duplicate),
+                    }
+                    results.append(result_item)
+                    if record.sync_status == "failed":
+                        failed.append({
+                            "index": index,
+                            "attendance_log_id": record.id,
+                            "event_hash": record.event_hash,
+                            "device_code": record.device_code or "",
+                            "pin": record.pin or "",
+                            "error": record.sync_error_message or record.sync_message or "Failed to sync attendance log.",
+                        })
                 except Exception as log_error:
                     failed.append({"index": index, "error": str(log_error)})
+            if touched_device_ids:
+                Device.browse(list(touched_device_ids)).write({"last_attendance_pull_at": fields.Datetime.now()})
             controller.sudo().write({"last_seen_at": fields.Datetime.now()})
             return self._json_response({
                 "ok": not bool(failed),
@@ -634,6 +664,7 @@ class EntryControlAPI(http.Controller):
                 "created": created,
                 "duplicates": duplicate,
                 "failed": failed,
+                "results": results,
                 "attendance_log_ids": ids,
             }, 200 if not failed else 207)
         except Exception as e:
